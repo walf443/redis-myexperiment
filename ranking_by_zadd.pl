@@ -3,6 +3,7 @@ use warnings;
 use RedisDB;
 use Parallel::Prefork;
 use Devel::KYTProf;
+use Time::HiRes qw();
 Devel::KYTProf->add_prof("RedisDB", 'execute', sub {
     my ($orig, $redis, $cmd, @args) = @_;
     my $args = join(" ", @args);
@@ -30,6 +31,12 @@ while ( $pm->signal_received ne 'TERM' ) {
         my $score = int(rand() * 100) * 10;
         my $bscore;
         if ( $redis_slave ) {
+            my $time = Time::HiRes::gettimeofday();
+            $redis->set('timestamp' => $time);
+            my $slave_time = $redis_slave->get('timestamp');
+            if ( $time - $slave_time > 1 ) {
+                warn "master: $time slave: $slave_time delay: @{[ $time - $slave_time ]}";
+            }
             $bscore = $redis_slave->zscore("ranking:01", "user_id:$random_user_id") || 0;
         } else {
             $bscore = $redis->zscore("ranking:01", "user_id:$random_user_id") || 0;
