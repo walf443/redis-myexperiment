@@ -2,6 +2,14 @@ use strict;
 use warnings;
 use RedisDB;
 use Log::Minimal qw(infof);
+use Devel::KYTProf;
+Devel::KYTProf->add_prof("RedisDB", 'execute', sub {
+    my ($orig, $redis, $cmd, @args) = @_;
+    my $args = join(" ", @args);
+    return "$cmd $args";
+});
+Devel::KYTProf->threshold(10);
+
 
 my $redis = RedisDB->new();
 while ( 1 ) {
