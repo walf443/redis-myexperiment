@@ -25,12 +25,13 @@ while ( $pm->signal_received ne 'TERM' ) {
                     if ( rand() < 0.1 ) {
                         die "queue failed!!!: $job";
                     }
-                    $redis->rpop("queue_processed");
+                    $redis->lrem("queue_processed", 1, $job);
                     infof("finished job successfully: $job");
                 };
                 if ( $@ ) {
-                    if ( $redis->brpoplpush("queue_processed", "queue", 1) ) {
-                        critf("it cause error while processing queue.: $@");
+                    critf("it cause error while processing queue.: $@");
+                    $redis->lrem("queue_processed", 1, $job);
+                    if ( $redis->lpush("queue", $job) ) {
                     } else {
                         critf("reenqueue failed: $job");
                     }
