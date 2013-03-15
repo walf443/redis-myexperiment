@@ -4,6 +4,6 @@ use RedisDB;
 
 my $redis = RedisDB->new;
 
-for my $i ( 1...1000 ) {
+for my $i ( 1...10000 ) {
     $redis->lpush("queue", $i);
 }
